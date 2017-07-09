@@ -29,61 +29,44 @@ func Max(x, y int) int {
 	}
 	return y
 }
-func (w *Workout) save() error {
+func (w *Workout) SaveWorkout() error {
 	w.Sets = append(w.Sets, Set{Exercise: "squat", Reps: 5, Weight: 22})
 	w.Sets = append(w.Sets, Set{Exercise: "bench", Reps: 5, Weight: 225})
 	w.Sets = append(w.Sets, Set{Exercise: "deadlift", Reps: 10, Weight: 225})
 	filename := fmt.Sprintf("%04d-%02d-%02d.txt", w.Time.Year(), w.Time.Month(), w.Time.Day())
-	Title := fmt.Sprintf("Workout on %04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
-	Title += strings.Repeat("=", len(Title)-1) + "\n\n"
-	exc_max_len := len("Exercise ")
-	rep_max_len := len("Reps ")
-	wgt_max_len := len("Weight ")
-	var Exercises []string
-	var Reps []string
-	var Weight []string
-	for _, s := range w.Sets {
-		Exercises = append(Exercises, fmt.Sprint(s.Exercise))
-		Reps = append(Reps, fmt.Sprint(s.Reps))
-		Weight = append(Weight, fmt.Sprint(s.Weight))
-		if len(Exercises[len(Exercises)-1]) > exc_max_len {
-			exc_max_len = len(Exercises[len(Exercises)-1])
-		}
-		if len(Reps[len(Exercises)-1]) > exc_max_len {
-			rep_max_len = len(Reps[len(Exercises)-1])
-		}
-		if len(Weight[len(Exercises)-1]) > exc_max_len {
-			wgt_max_len = len(Weight[len(Exercises)-1])
-		}
+	title := fmt.Sprintf("Workout on %04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
+	title += strings.Repeat("=", len(title)-1) + "\n\n"
+	var wlog string
+	for i, s := range w.Sets {
+		wlog += "* Set " + fmt.Sprint(i) + "\n"
+		wlog += "    * Exercise: " + fmt.Sprint(s.Exercise) + "\n"
+		wlog += "    * Reps:" + fmt.Sprint(s.Reps) + "\n"
+		wlog += "    * Weight:" + fmt.Sprint(s.Weight) + "\n"
 	}
-	Table := "| Exercise "
-	Table = Table + strings.Repeat(" ", Max(0, exc_max_len-len("Exercise ")))
-	Table = Table + " | Reps "
-	Table = Table + strings.Repeat(" ", Max(0, rep_max_len-len("Reps ")))
-	Table = Table + " | Weight "
-	Table = Table + strings.Repeat(" ", Max(0, wgt_max_len-len("Weight ")))
-	Table = Table + " |\n"
-	for i, _ := range Exercises {
-		str := fmt.Sprint(Exercises[i])
-		Table = Table + "| " + str
-		Table = Table + strings.Repeat(" ", Max(0, exc_max_len-len(str)))
-		str = fmt.Sprint(Reps[i])
-		Table = Table + " | " + str
-		Table = Table + strings.Repeat(" ", Max(0, rep_max_len-len(str)))
-		str = fmt.Sprint(Weight[i])
-		Table = Table + " | " + str
-		Table = Table + strings.Repeat(" ", Max(0, wgt_max_len-len(str)))
-		Table = Table + " |\n"
-	}
-	fmt.Println(Table)
-	return ioutil.WriteFile(filename, []byte(Title+Table), 0600)
+	fmt.Println(wlog)
+	return ioutil.WriteFile(filename, []byte(title+wlog), 0600)
 }
+
+/*
+func LoadWorkout(date string) (*Workout error) {
+    //filename := fmt.Sprintf("%04d-%02d-%02d.txt", date.Year(), .Month(), w.Time.Day())
+    filename := date + ".txt"
+    f, err := os.Open(filename)
+    defer f.close()
+
+    w := Workout{Time:
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+	matchedSet
+    }
+	return ioutil.WriteFile(filename, []byte(title+wlog), 0600)
+}*/
 
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/workout/"):]
 	if id == "" {
 		w := &Workout{Time: time.Now()}
-		w.save()
+		w.SaveWorkout()
 	}
 }
 func ProcessWorkoutFunc(w http.ResponseWriter, r *http.Request) {
