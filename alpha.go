@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/md5"
 	"fmt"
 	"html/template"
@@ -8,6 +9,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,8 +18,8 @@ import (
 
 type Set struct {
 	Exercise string
-	Reps     uint
-	Weight   float32
+	Reps     uint64
+	Weight   float64
 }
 type Workout struct {
 	Time time.Time
@@ -38,7 +41,7 @@ func (w *Workout) SaveWorkout() error {
 	title += strings.Repeat("=", len(title)-1) + "\n\n"
 	var wlog string
 	for i, s := range w.Sets {
-		wlog += "* Set " + fmt.Sprint(i) + "\n"
+		wlog += "* Set: " + fmt.Sprint(i) + "\n"
 		wlog += "    * Exercise: " + fmt.Sprint(s.Exercise) + "\n"
 		wlog += "    * Reps:" + fmt.Sprint(s.Reps) + "\n"
 		wlog += "    * Weight:" + fmt.Sprint(s.Weight) + "\n"
@@ -47,26 +50,42 @@ func (w *Workout) SaveWorkout() error {
 	return ioutil.WriteFile(filename, []byte(title+wlog), 0600)
 }
 
-/*
-func LoadWorkout(date string) (*Workout error) {
-    //filename := fmt.Sprintf("%04d-%02d-%02d.txt", date.Year(), .Month(), w.Time.Day())
-    filename := date + ".txt"
-    f, err := os.Open(filename)
-    defer f.close()
+func LoadWorkout(date string) (*Workout, error) {
+	//filename := fmt.Sprintf("%04d-%02d-%02d.txt", date.Year(), .Month(), w.Time.Day())
+	filename := date + ".txt"
+	f, _ := os.Open(filename)
+	defer f.Close()
 
-    w := Workout{Time:
-    scanner := bufio.NewScanner(f)
-    for scanner.Scan() {
-	matchedSet
-    }
-	return ioutil.WriteFile(filename, []byte(title+wlog), 0600)
-}*/
+	layout := "2006-01-02"
+	d, _ := time.Parse(layout, date)
+	w := Workout{Time: d}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		matchedSet, _ := regexp.MatchString("Set:", scanner.Text())
+		matchedExercise, _ := regexp.MatchString("Exercise:", scanner.Text())
+		matchedReps, _ := regexp.MatchString("Reps:", scanner.Text())
+		matchedWeight, _ := regexp.MatchString("Weight:", scanner.Text())
+		if matchedSet {
+			w.Sets = append(w.Sets, Set{})
+		} else if matchedExercise {
+			w.Sets[len(w.Sets)-1].Exercise = strings.Split(scanner.Text(), ":")[1]
+		} else if matchedReps {
+			w.Sets[len(w.Sets)-1].Reps, _ = strconv.ParseUint(strings.Split(scanner.Text(), ":")[1], 10, 64)
+		} else if matchedWeight {
+			w.Sets[len(w.Sets)-1].Weight, _ = strconv.ParseFloat(strings.Split(scanner.Text(), ":")[1], 32)
+		}
+	}
+	return &w, nil
+}
 
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/workout/"):]
 	if id == "" {
-		w := &Workout{Time: time.Now()}
-		w.SaveWorkout()
+		workout := &Workout{Time: time.Now()}
+		workout.SaveWorkout()
+	} else {
+		workout, _ := LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", time.Now().Year(), time.Now().Month(), time.Now().Day()))
+		fmt.Fprintf(w, "%+v\n", workout)
 	}
 }
 func ProcessWorkoutFunc(w http.ResponseWriter, r *http.Request) {
