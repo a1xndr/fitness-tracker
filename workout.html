@@ -1,0 +1,60 @@
+<html>
+    <head>
+        <title>Workout</title>
+    </head>
+    <style>
+body {
+    margin: 0 auto;
+    max-width: 50em;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1.5;
+    padding: 4em 1em;
+    color: #555;
+}
+h2 {
+    margin-top: 1em;
+    padding-top: 1em;
+    color: #333;
+}
+a {
+    color: #e81c4f;
+}
+            th, td {
+                padding: 0.25rem;
+                text-align: left;
+                border: 1px solid #ccc;
+            }
+    </style>
+    <body>
+        <h1> Workout on {{.FormattedDate}}</h1>
+        <table>
+            <tr>
+                <th>Exercise</th>
+                <th>Reps</th>
+                <th>Weight</th>
+            </tr>
+            {{range .Sets}}
+            <tr>
+                <td>{{.Exercise}}</td>
+                <td>{{.Reps}}</td>
+                <td>{{.Weight}}</td>
+            </tr>
+            {{end}}
+        </table>
+        <form action="/workout/{{.FormattedDate}}" method="post">
+            
+            <select name="exercise">
+                  <option value="squat">Squat</option>
+                    <option value="bench press">Bench Press</option>
+                      <option value="deadlift">Deadlift</option>
+                        <option value="pull-up">Pull-up</option>
+                        <option value="overhead press">Overhead Press</option>
+            </select> 
+            Reps: <input type="text" name="reps" size="10">
+            Weight: <input type="text" name="weight" size="10">
+            <input type="hidden" value="{{.}}">
+            <input type="submit" value="Add Set">
+        </form>
+    </body>
+</html>
+

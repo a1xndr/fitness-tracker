@@ -2,10 +2,8 @@ package main
 
 import (
 	"bufio"
-	"crypto/md5"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,7 +32,7 @@ func Max(x, y int) int {
 }
 
 func (w *Workout) FormattedDate() string {
-	return fmt.Sprintf("%04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
+	return fmt.Sprintf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
 }
 func (w *Workout) FormatAsMd() string {
 	var wlog string
@@ -45,6 +43,11 @@ func (w *Workout) FormatAsMd() string {
 		wlog += "    * Weight:" + fmt.Sprint(s.Weight) + "\n"
 	}
 	return wlog
+}
+
+func (w *Workout) AppendSet(s *Set) error {
+	w.Sets = append(w.Sets, *s)
+	return nil
 }
 
 func (w *Workout) FormatAsAsciiTable() string {
@@ -91,9 +94,6 @@ func (w *Workout) FormatAsAsciiTable() string {
 }
 
 func (w *Workout) SaveWorkout() error {
-	w.Sets = append(w.Sets, Set{Exercise: "squat", Reps: 5, Weight: 22})
-	w.Sets = append(w.Sets, Set{Exercise: "bench", Reps: 5, Weight: 225})
-	w.Sets = append(w.Sets, Set{Exercise: "deadlift", Reps: 10, Weight: 225})
 	filename := fmt.Sprintf("%04d-%02d-%02d.txt", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	title := fmt.Sprintf("Workout on %04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	title += strings.Repeat("=", len(title)-1) + "\n\n"
@@ -136,56 +136,27 @@ func LoadWorkout(date string) (*Workout, error) {
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/workout/"):]
 	t := time.Now()
+	var workout *Workout
 	if id != "" {
+		layout := "2006-01-02"
+		t, _ = time.Parse(layout, id)
 	}
-	workout, _ := LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day()))
-	tmpl := template.Must(template.ParseFiles("workout.gtpl"))
+	workout, _ = LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day()))
+
+	if r.Method == http.MethodPost {
+		exercise := r.FormValue("exercise")
+		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
+		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
+		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
+		workout.AppendSet(&s)
+		workout.SaveWorkout()
+	}
+	tmpl := template.Must(template.ParseFiles("workout.html"))
 	tmpl.Execute(w, workout)
 
 }
-func ProcessWorkoutFunc(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		crutime := time.Now().Unix()
-		h := md5.New()
-		io.WriteString(h, strconv.FormatInt(crutime, 10))
-		token := fmt.Sprintf("%x", h.Sum(nil))
-		t, _ := template.ParseFiles("workout.gtpl")
-		t.Execute(w, token)
-	} else {
-		r.ParseForm()
-		fmt.Println("reps: ", r.Form["reps"])
-		fmt.Fprintf(w, "reps: ", r.Form["reps"])
-		fmt.Println("weight: ", r.Form["weight"])
-		fmt.Fprintf(w, "weight: ", r.Form["weight"])
-	}
-}
-
-func DeleteTaskFunc(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path[len("/delete/"):]
-	if id == "all" {
-		fmt.Fprintf(w, "Ayo che boi delete all")
-	} else {
-		id, err := strconv.Atoi(id)
-		if err != nil {
-			fmt.Fprintf(w, "You fucked up kid.")
-		} else {
-			fmt.Fprintf(w, "Deleting Task", id)
-		}
-	}
-
-}
-
-func sayHello(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	for k, v := range r.Form {
-		fmt.Println("key:", k)
-		fmt.Println("val:", strings.Join(v, ""))
-	}
-	fmt.Fprintf(w, "Whats chice?")
-}
 
 func main() {
-	http.HandleFunc("/delete/", DeleteTaskFunc)
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
