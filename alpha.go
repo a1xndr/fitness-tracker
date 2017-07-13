@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var listen_port string = ":80"
+
 type Set struct {
 	Exercise string
 	Reps     uint64
@@ -168,7 +170,10 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
 	http.HandleFunc("/dashboard", DashboardTaskFunc)
-	err := http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "dashboard", 301)
+	})
+	err := http.ListenAndServe(listen_port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
