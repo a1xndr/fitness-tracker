@@ -94,7 +94,7 @@ func (w *Workout) FormatAsAsciiTable() string {
 }
 
 func (w *Workout) SaveWorkout() error {
-	filename := fmt.Sprintf("%04d-%02d-%02d.txt", w.Time.Year(), w.Time.Month(), w.Time.Day())
+	filename := "data/workouts/" + fmt.Sprintf("%04d-%02d-%02d.txt", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	title := fmt.Sprintf("Workout on %04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	title += strings.Repeat("=", len(title)-1) + "\n\n"
 	wlog := w.FormatAsMd()
@@ -103,8 +103,7 @@ func (w *Workout) SaveWorkout() error {
 }
 
 func LoadWorkout(date string) (*Workout, error) {
-	//filename := fmt.Sprintf("%04d-%02d-%02d.txt", date.Year(), .Month(), w.Time.Day())
-	filename := date + ".txt"
+	filename := "data/workouts/" + date + ".txt"
 	f, err := os.Open(filename)
 	defer f.Close()
 
@@ -153,11 +152,22 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl := template.Must(template.ParseFiles("workout.html"))
 	tmpl.Execute(w, workout)
+}
 
+func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
+	files, _ := ioutil.ReadDir("data/workouts")
+	var workouts []string
+	for _, file := range files {
+		workouts = append([]string{file.Name()[0 : len(file.Name())-len(".txt")]}, workouts...)
+		fmt.Println(workouts[len(workouts)-1])
+	}
+	tmpl := template.Must(template.ParseFiles("dashboard.html"))
+	tmpl.Execute(w, workouts)
 }
 
 func main() {
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
+	http.HandleFunc("/dashboard", DashboardTaskFunc)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
