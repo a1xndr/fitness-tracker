@@ -1,0 +1,41 @@
+body {
+    margin: 0 auto;
+    max-width: 50em;
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1.5;
+    padding: 4em 1em;
+    color: #555;
+}
+h2 {
+    margin-top: 1em;
+    padding-top: 1em;
+    color: #333;
+}
+a {
+    color: #0089ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,137,255,.3);
+    -webkit-transition: color .3s ease,border-color .3s ease;
+    transition: color .3s ease,border-color .3s ease;
+}
+a:hover {
+    color: #dd0000;
+    border-bottom: 1px solid rgba(200,0,0,.3);
+}
+th, td {
+    padding: 0.5rem;
+    text-align: left;
+    border: 0px solid #ccc;
+}
+
+.number {
+    text-align:right;
+}
+ul li {
+    width:10em;
+    float:left;
+    list-style-type:none
+}
+table {
+    border: 0px;
+}

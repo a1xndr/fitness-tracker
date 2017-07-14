@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var listen_port string = ":80"
+var listen_port string = ":8080"
 
 type Set struct {
 	Exercise string
@@ -170,9 +170,11 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
 	http.HandleFunc("/dashboard", DashboardTaskFunc)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "dashboard", 301)
 	})
+
 	err := http.ListenAndServe(listen_port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
