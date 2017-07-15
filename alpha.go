@@ -41,8 +41,8 @@ func (w *Workout) FormatAsMd() string {
 	for i, s := range w.Sets {
 		wlog += "* Set: " + fmt.Sprint(i) + "\n"
 		wlog += "    * Exercise: " + fmt.Sprint(s.Exercise) + "\n"
-		wlog += "    * Reps:" + fmt.Sprint(s.Reps) + "\n"
-		wlog += "    * Weight:" + fmt.Sprint(s.Weight) + "\n"
+		wlog += "    * Reps: " + fmt.Sprint(s.Reps) + "\n"
+		wlog += "    * Weight: " + fmt.Sprint(s.Weight) + "\n"
 	}
 	return wlog
 }
@@ -118,10 +118,10 @@ func LoadWorkout(date string) (*Workout, error) {
 	}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		matchedSet, _ := regexp.MatchString("Set:", scanner.Text())
-		matchedExercise, _ := regexp.MatchString("Exercise:", scanner.Text())
-		matchedReps, _ := regexp.MatchString("Reps:", scanner.Text())
-		matchedWeight, _ := regexp.MatchString("Weight:", scanner.Text())
+		matchedSet, _ := regexp.MatchString("Set: ", scanner.Text())
+		matchedExercise, _ := regexp.MatchString("Exercise: ", scanner.Text())
+		matchedReps, _ := regexp.MatchString("Reps: ", scanner.Text())
+		matchedWeight, _ := regexp.MatchString("Weight: ", scanner.Text())
 		if matchedSet {
 			w.Sets = append(w.Sets, Set{})
 		} else if matchedExercise {
