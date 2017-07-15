@@ -80,7 +80,7 @@ func (w *Workout) FormatAsAsciiTable() string {
 	Table = Table + " | Weight "
 	Table = Table + strings.Repeat(" ", Max(0, wgt_max_len-len("Weight ")))
 	Table = Table + " |\n"
-	Table += strings.Repeat("-", len(Table)-1)
+	Table += strings.Repeat("-", len(Table)-1) + "\n"
 	for i, _ := range Exercises {
 		str := fmt.Sprint(Exercises[i])
 		Table = Table + "| " + str
@@ -153,6 +153,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		workout.AppendSet(&s)
 		workout.SaveWorkout()
 	}
+	fmt.Println(workout.FormatAsAsciiTable())
 	tmpl := template.Must(template.ParseFiles("workout.html"))
 	tmpl.Execute(w, workout)
 }
