@@ -80,6 +80,7 @@ func (w *Workout) FormatAsAsciiTable() string {
 	Table = Table + " | Weight "
 	Table = Table + strings.Repeat(" ", Max(0, wgt_max_len-len("Weight ")))
 	Table = Table + " |\n"
+	Table += strings.Repeat("-", len(Table)-1)
 	for i, _ := range Exercises {
 		str := fmt.Sprint(Exercises[i])
 		Table = Table + "| " + str
