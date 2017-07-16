@@ -1,0 +1,27 @@
+-- user
+
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION
+CREATE TABLE user (
+    id integer primary key autoincrement,
+    username varchar(100),
+    password varchar(1000),
+    email varchar(100)
+);
+
+
+-- exercise
+
+CREATE TABLE exercise (
+    id integer primary key autoincrement,
+    name varchar(100),
+    varchar(1000)
+);
+
+-- sets
+
+CREATE TABLE exercise (
+    id integer primary key autoincrement,
+    name varchar(100),
+    varchar(1000)
+);
