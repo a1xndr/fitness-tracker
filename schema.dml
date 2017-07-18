@@ -14,14 +14,26 @@ CREATE TABLE user (
 
 CREATE TABLE exercise (
     id integer primary key autoincrement,
-    name varchar(100),
-    varchar(1000)
+    name varchar(1000),
+    description varchar(1000)
+);
+
+-- workout
+CREATE TABLE workout(
+    id integer primary key autoincrement,
+    date datetime
 );
 
 -- sets
 
-CREATE TABLE exercise (
+CREATE TABLE sets (
     id integer primary key autoincrement,
-    name varchar(100),
-    varchar(1000)
+    workout references workout(id),
+    exercise references exercise(id),
+    reps integer,
+    weight real,
+    seconds integer
 );
+
+
+
