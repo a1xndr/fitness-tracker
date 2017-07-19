@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -106,6 +108,18 @@ func (w *Workout) SaveWorkout() error {
 }
 
 func LoadWorkout(date string) (*Workout, error) {
+	sqlstatement := "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = workout.id and workout.date = " + date
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	rows, err := db.Exec(sqlstatement)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(rows)
+
 	filename := "data/workouts/" + date + ".txt"
 	f, err := os.Open(filename)
 	defer f.Close()
