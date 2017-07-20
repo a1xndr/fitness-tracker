@@ -54,6 +54,24 @@ func (w *Workout) AppendSet(s *Set) error {
 	return nil
 }
 
+func (w *Workout) SaveSetInDB() error {
+	sqlstatement, err := db.Prepare(`INSERT INTO sets(exercise,reps,weight
+    ,workout) VALUES(?,?,?,(SELECT id from workout 
+    WHERE date='` + date + `'))`)
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	res, err := sqlstatement.Execute(w.Sets[len(Sets)].Reps,
+		w.Sets[len(Sets)].Reps,
+		w.Sets[len(Sets)].Weight)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
+}
+
 func (w *Workout) FormatAsAsciiTable() string {
 	exc_max_len := len("Exercise ")
 	rep_max_len := len("Reps ")
