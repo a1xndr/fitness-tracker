@@ -55,17 +55,28 @@ func (w *Workout) AppendSet(s *Set) error {
 }
 
 func (w *Workout) SaveSetInDB() error {
-	sqlstatement, err := db.Prepare(`INSERT INTO sets(exercise,reps,weight
-    ,workout) VALUES(?,?,?,(SELECT id from workout 
-    WHERE date='` + date + `'))`)
 	db, err := sql.Open("sqlite3", "./alpha.db")
+	sqlstatement, err := db.Prepare(`IF NOT EXISTS 
+	    (SELECT workout.date FROM workout WHERE workout.date='?')
+	BEGIN
+	    INSERT INTO workout(date) VALUES(?)
+	END;
+	INSERT INTO sets(exercise,reps,weight
+		,workout) VALUES(?,?,?,(SELECT id from workout
+		WHERE date='?'))
+	`)
+	timefmt := "2006-01-02 15:04:05"
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	res, err := sqlstatement.Execute(w.Sets[len(Sets)].Reps,
-		w.Sets[len(Sets)].Reps,
-		w.Sets[len(Sets)].Weight)
+	_, err = sqlstatement.Exec(
+		w.Time.Format(timefmt),
+		w.Time.Format(timefmt),
+		w.Sets[len(w.Sets)].Reps,
+		w.Sets[len(w.Sets)].Reps,
+		w.Sets[len(w.Sets)].Weight,
+		w.Time.Format(timefmt))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,13 +127,30 @@ func (w *Workout) FormatAsAsciiTable() string {
 	return Table
 }
 
+func (w *Workout) CreateWorkoutInDB() error {
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	sqlstatement, err := db.Prepare(`
+	INSERT INTO workout(date) 
+	VALUES(?)
+	WHERE NOT EXISTS(SELECT workout.date FROM workout WHERE workout.date='?');
+	`)
+	timefmt := "2006-01-02 15:04:05"
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	res, err := sqlstatement.Exec(
+		w.Time.Format(timefmt),
+		w.Time.Format(timefmt))
+	fmt.Println(res)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
+}
+
 func (w *Workout) SaveWorkout() error {
-	filename := "data/workouts/" + fmt.Sprintf("%04d-%02d-%02d.txt", w.Time.Year(), w.Time.Month(), w.Time.Day())
-	title := fmt.Sprintf("Workout on %04d-%02d-%02d\n", w.Time.Year(), w.Time.Month(), w.Time.Day())
-	title += strings.Repeat("=", len(title)-1) + "\n\n"
-	wlog := w.FormatAsMd()
-	fmt.Println(wlog)
-	return ioutil.WriteFile(filename, []byte(title+wlog), 0600)
+	return w.SaveSetInDB()
 }
 
 func LoadWorkout(date string) (*Workout, error) {
