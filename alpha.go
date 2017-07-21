@@ -56,14 +56,10 @@ func (w *Workout) AppendSet(s *Set) error {
 
 func (w *Workout) SaveSetInDB() error {
 	db, err := sql.Open("sqlite3", "./alpha.db")
-	sqlstatement, err := db.Prepare(`IF NOT EXISTS 
-	    (SELECT workout.date FROM workout WHERE workout.date='?')
-	BEGIN
-	    INSERT INTO workout(date) VALUES(?)
-	END;
+	sqlstatement, err := db.Prepare(`
 	INSERT INTO sets(exercise,reps,weight
 		,workout) VALUES(?,?,?,(SELECT id from workout
-		WHERE date='?'))
+		WHERE date=?))
 	`)
 	timefmt := "2006-01-02 15:04:05"
 	if err != nil {
@@ -71,11 +67,9 @@ func (w *Workout) SaveSetInDB() error {
 	}
 	defer db.Close()
 	_, err = sqlstatement.Exec(
-		w.Time.Format(timefmt),
-		w.Time.Format(timefmt),
-		w.Sets[len(w.Sets)].Reps,
-		w.Sets[len(w.Sets)].Reps,
-		w.Sets[len(w.Sets)].Weight,
+		w.Sets[len(w.Sets)-1].Reps,
+		w.Sets[len(w.Sets)-1].Reps,
+		w.Sets[len(w.Sets)-1].Weight,
 		w.Time.Format(timefmt))
 	if err != nil {
 		log.Fatal(err)
@@ -128,19 +122,17 @@ func (w *Workout) FormatAsAsciiTable() string {
 }
 
 func (w *Workout) CreateWorkoutInDB() error {
+	timefmt := "2006-01-02T15:04:05"
 	db, err := sql.Open("sqlite3", "./alpha.db")
 	sqlstatement, err := db.Prepare(`
 	INSERT INTO workout(date) 
-	VALUES(?)
-	WHERE NOT EXISTS(SELECT workout.date FROM workout WHERE workout.date='?');
+	VALUES(?);
 	`)
-	timefmt := "2006-01-02 15:04:05"
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 	res, err := sqlstatement.Exec(
-		w.Time.Format(timefmt),
 		w.Time.Format(timefmt))
 	fmt.Println(res)
 	if err != nil {
@@ -204,7 +196,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		t, _ = time.Parse(layout, id)
 	}
 	workout, _ = LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day()))
-
+	workout.CreateWorkoutInDB()
 	if r.Method == http.MethodPost {
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
@@ -212,6 +204,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
 		workout.AppendSet(&s)
 		workout.SaveWorkout()
+
 	}
 	fmt.Println(workout.FormatAsAsciiTable())
 	tmpl := template.Must(template.ParseFiles("workout.html"))
