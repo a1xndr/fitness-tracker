@@ -6,7 +6,6 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -67,7 +66,7 @@ func (w *Workout) SaveSetInDB() error {
 	}
 	defer db.Close()
 	_, err = sqlstatement.Exec(
-		w.Sets[len(w.Sets)-1].Reps,
+		w.Sets[len(w.Sets)-1].Exercise,
 		w.Sets[len(w.Sets)-1].Reps,
 		w.Sets[len(w.Sets)-1].Weight,
 		w.Time.Format(timefmt))
@@ -212,10 +211,26 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
-	files, _ := ioutil.ReadDir("data/workouts")
+	var date time.Time
+	sqlstatement := "select workout.date from workout"
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	rows, err := db.Query(sqlstatement)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(rows)
 	var workouts []string
-	for _, file := range files {
-		workouts = append([]string{file.Name()[0 : len(file.Name())-len(".txt")]}, workouts...)
+	timefmt := "2006-01-02"
+	for rows.Next() {
+		err := rows.Scan(&date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		workouts = append([]string{date.Format(timefmt)}, workouts...)
 		fmt.Println(workouts[len(workouts)-1])
 	}
 	tmpl := template.Must(template.ParseFiles("dashboard.html"))
