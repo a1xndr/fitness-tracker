@@ -16,14 +16,14 @@ BEGIN TRANSACTION;
 CREATE TABLE exercise (
     id integer primary key autoincrement,
     name varchar(1000),
-    type references exercisetype(id),
+    type references exercisemetric(id),
     description varchar(1000)
 );
 COMMIT;
 -- exercisetype
 
 BEGIN TRANSACTION;
-CREATE TABLE exercisetype (
+CREATE TABLE exercisemetric (
     id integer primary key autoincrement,
     name varchar(1000),
     reps integer,

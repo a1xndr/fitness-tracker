@@ -21,10 +21,16 @@ type Set struct {
 	Exercise string
 	Reps     uint64
 	Weight   float64
+	id       uint64
 }
 type Workout struct {
 	Time time.Time
 	Sets []Set
+}
+
+type Exercise struct {
+	Name string
+	Id   uint64
 }
 
 func Max(x, y int) int {
@@ -56,10 +62,10 @@ func (w *Workout) AppendSet(s *Set) error {
 func (w *Workout) SaveSetInDB() error {
 	db, err := sql.Open("sqlite3", "./alpha.db")
 	sqlstatement, err := db.Prepare(`
-	INSERT INTO sets(exercise,reps,weight
-		,workout) VALUES(?,?,?,(SELECT id from workout
-		WHERE date=?))
-	`)
+    INSERT INTO sets(exercise,reps,weight
+    ,workout) VALUES(?,?,?,(SELECT id from workout
+    WHERE date=?))
+    `)
 	timefmt := "2006-01-02 15:04:05"
 	if err != nil {
 		log.Fatal(err)
@@ -237,8 +243,38 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, workouts)
 }
 
+func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
+	sqlstatement := "select exercise.id, exercise.name from exercise"
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	rows, err := db.Query(sqlstatement)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(rows)
+	var exercises []Exercise
+	for rows.Next() {
+		exercise := new(Exercise)
+		err := rows.Scan(&exercise.Id, &exercise.Name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		exercises = append(exercises, *exercise)
+	}
+	tmpl := template.Must(template.ParseFiles("templates/exerciselist.tmpl", "templates/base/header.tmpl", "templates/base/footer.tmpl"))
+	err = tmpl.Execute(w, exercises)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
 func main() {
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
+	http.HandleFunc("/exercise/", ExerciseTaskFunc)
 	http.HandleFunc("/dashboard", DashboardTaskFunc)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
