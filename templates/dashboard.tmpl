@@ -1,9 +1,4 @@
-<html>
-    <head>
-        <title>Dashboard</title>
-        <link rel="stylesheet" type="text/css" href="/static/main.css">
-    </head>
-    <body>
+{{template "header" .}}
         <h3> Dashboard </h3>
         <a href="/workout/">New Workout</a>
         <ul>
@@ -11,6 +6,4 @@
             <li><a href="/workout/{{.}}">{{.}}</a></li>
             {{end}}
         </ul>
-    </body>
-</html>
-
+{{template "footer" .}}

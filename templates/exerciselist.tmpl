@@ -1,7 +1,9 @@
+{{template "header" .}}
 <h3>Exercises</h3>
-<a href="/exercise/create"></a>
+<a href="/exercise/create">Define a new exercise</a>
 <ul>
 {{range .}}
 <li><a href="/workout/{{.Id}}">{{.Name}}</a></li>
 {{end}}
 </ul>
+{{template "footer" .}}
