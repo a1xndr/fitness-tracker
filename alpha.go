@@ -29,8 +29,13 @@ type Workout struct {
 }
 
 type Exercise struct {
-	Name string
-	Id   uint64
+	name    string
+	Id      uint64
+	reps    bool
+	weight  bool
+	seconds bool
+	speed   bool
+	grade   bool
 }
 
 func Max(x, y int) int {
@@ -209,7 +214,6 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
 		workout.AppendSet(&s)
 		workout.SaveWorkout()
-
 	}
 	fmt.Println(workout.FormatAsAsciiTable())
 	tmpl := template.Must(template.ParseFiles(
@@ -253,6 +257,26 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 	arg := r.URL.Path[len("/exercise/"):]
 	if arg == "create" {
+		/*Name    string
+		Id      uint64
+		reps    bool
+		weight  bool
+		seconds bool
+		speed   bool
+		grade   bool*/
+		if r.Method == http.MethodPost {
+			s := Exercise{
+				name:        r.FormValue("name"),
+				reps:        r.FormValue("reps"),
+				description: r.FormValue("reps"),
+				weight:      r.FormValue("weight"),
+				seconds:     r.FormValue("seconds"),
+				speed:       r.FormValue("speed"),
+				speed:       r.FormValue("grade"),
+			}
+			workout.AppendSet(&s)
+			workout.SaveWorkout()
+		}
 		tmpl := template.Must(template.ParseFiles(
 			"templates/exercisecreate.tmpl",
 			"templates/base/header.tmpl",

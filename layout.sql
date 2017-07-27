@@ -23,7 +23,6 @@ CREATE TABLE exercise (
     seconds integer,
     speed integer,
     grade integer,
-    note integer
 );
 COMMIT;
 -- exercisetype
@@ -59,6 +58,7 @@ CREATE TABLE sets (
     reps integer,
     weight real,
     seconds integer
+    note varchar(1000)
 );
 
 COMMIT;
