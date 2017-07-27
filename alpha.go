@@ -251,35 +251,46 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
-	sqlstatement := "select exercise.id, exercise.name from exercise"
-	db, err := sql.Open("sqlite3", "./alpha.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	rows, err := db.Query(sqlstatement)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(rows)
-	var exercises []Exercise
-	for rows.Next() {
-		exercise := new(Exercise)
-		err := rows.Scan(&exercise.Id, &exercise.Name)
+	arg := r.URL.Path[len("/exercise/"):]
+	if arg == "create" {
+		tmpl := template.Must(template.ParseFiles(
+			"templates/exercisecreate.tmpl",
+			"templates/base/header.tmpl",
+			"templates/base/footer.tmpl"))
+		err := tmpl.Execute(w, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
-		exercises = append(exercises, *exercise)
+	} else {
+		sqlstatement := "select exercise.id, exercise.name from exercise"
+		db, err := sql.Open("sqlite3", "./alpha.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		rows, err := db.Query(sqlstatement)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(rows)
+		var exercises []Exercise
+		for rows.Next() {
+			exercise := new(Exercise)
+			err := rows.Scan(&exercise.Id, &exercise.Name)
+			if err != nil {
+				log.Fatal(err)
+			}
+			exercises = append(exercises, *exercise)
+		}
+		tmpl := template.Must(template.ParseFiles(
+			"templates/exerciselist.tmpl",
+			"templates/base/header.tmpl",
+			"templates/base/footer.tmpl"))
+		err = tmpl.Execute(w, exercises)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	tmpl := template.Must(template.ParseFiles(
-		"templates/exerciselist.tmpl",
-		"templates/base/header.tmpl",
-		"templates/base/footer.tmpl"))
-	err = tmpl.Execute(w, exercises)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 }
 
 func main() {
