@@ -29,8 +29,9 @@ type Workout struct {
 }
 
 type Exercise struct {
-	name    string
 	Id      uint64
+	name    string
+	description    string
 	reps    bool
 	weight  bool
 	seconds bool
@@ -155,6 +156,31 @@ func (w *Workout) SaveWorkout() error {
 	return w.SaveSetInDB()
 }
 
+func (ex *Exercise) SaveExercise() error {
+	db, err := sql.Open("sqlite3", "./alpha.db")
+	sqlstatement, err := db.Prepare(`
+    INSERT INTO exercise(name, description, reps, weight, seconds, speed, grade)
+    VALUES(?,?,?,?,?,?,?)
+    `)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	_, err = sqlstatement.Exec(
+            ex.name,
+            ex.description,
+            ex.reps,
+            ex.weight,
+            ex.seconds,
+            ex.speed,
+            ex.grade)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
+    
+}
+
 func LoadWorkout(date string) (*Workout, error) {
 	sqlstatement := "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = workout.id and workout.date = " + date
 	db, err := sql.Open("sqlite3", "./alpha.db")
@@ -257,25 +283,16 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 	arg := r.URL.Path[len("/exercise/"):]
 	if arg == "create" {
-		/*Name    string
-		Id      uint64
-		reps    bool
-		weight  bool
-		seconds bool
-		speed   bool
-		grade   bool*/
 		if r.Method == http.MethodPost {
 			s := Exercise{
 				name:        r.FormValue("name"),
-				reps:        r.FormValue("reps"),
-				description: r.FormValue("reps"),
-				weight:      r.FormValue("weight"),
-				seconds:     r.FormValue("seconds"),
-				speed:       r.FormValue("speed"),
-				speed:       r.FormValue("grade"),
+				reps:        r.FormValue("reps") == "true",
+				description: r.FormValue("description"),
+				weight:      r.FormValue("weight") == "true",
+				seconds:     r.FormValue("seconds") == "true",
+				speed:       r.FormValue("speed") == "true",
+				grade:       r.FormValue("grade") == "true",
 			}
-			workout.AppendSet(&s)
-			workout.SaveWorkout()
 		}
 		tmpl := template.Must(template.ParseFiles(
 			"templates/exercisecreate.tmpl",
@@ -300,7 +317,7 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 		var exercises []Exercise
 		for rows.Next() {
 			exercise := new(Exercise)
-			err := rows.Scan(&exercise.Id, &exercise.Name)
+			err := rows.Scan(&exercise.Id, &exercise.name)
 			if err != nil {
 				log.Fatal(err)
 			}
