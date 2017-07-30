@@ -17,12 +17,12 @@ CREATE TABLE exercise (
     id integer primary key autoincrement,
     name varchar(1000),
     type references exercisemetric(id),
-    description varchar(1000)
+    description varchar(1000),
     reps integer,
     weight integer,
     seconds integer,
     speed integer,
-    grade integer,
+    grade integer
 );
 COMMIT;
 -- exercisetype

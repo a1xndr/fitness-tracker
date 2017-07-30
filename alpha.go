@@ -293,6 +293,7 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 				speed:       r.FormValue("speed") == "true",
 				grade:       r.FormValue("grade") == "true",
 			}
+                        s.SaveExercise()
 		}
 		tmpl := template.Must(template.ParseFiles(
 			"templates/exercisecreate.tmpl",
