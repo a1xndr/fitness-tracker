@@ -29,14 +29,14 @@ type Workout struct {
 }
 
 type Exercise struct {
-	Id      uint64
-	name    string
-	description    string
-	reps    bool
-	weight  bool
-	seconds bool
-	speed   bool
-	grade   bool
+	Id          uint64
+	Name        string
+	Description string
+	Reps        bool
+	Weight      bool
+	Seconds     bool
+	Speed       bool
+	Grade       bool
 }
 
 func Max(x, y int) int {
@@ -167,18 +167,18 @@ func (ex *Exercise) SaveExercise() error {
 	}
 	defer db.Close()
 	_, err = sqlstatement.Exec(
-            ex.name,
-            ex.description,
-            ex.reps,
-            ex.weight,
-            ex.seconds,
-            ex.speed,
-            ex.grade)
+		ex.Name,
+		ex.Description,
+		ex.Reps,
+		ex.Weight,
+		ex.Seconds,
+		ex.Speed,
+		ex.Grade)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return err
-    
+
 }
 
 func LoadWorkout(date string) (*Workout, error) {
@@ -285,15 +285,16 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 	if arg == "create" {
 		if r.Method == http.MethodPost {
 			s := Exercise{
-				name:        r.FormValue("name"),
-				reps:        r.FormValue("reps") == "true",
-				description: r.FormValue("description"),
-				weight:      r.FormValue("weight") == "true",
-				seconds:     r.FormValue("seconds") == "true",
-				speed:       r.FormValue("speed") == "true",
-				grade:       r.FormValue("grade") == "true",
+				Name:        r.FormValue("name"),
+				Reps:        r.FormValue("reps") == "on",
+				Description: r.FormValue("description"),
+				Weight:      r.FormValue("weight") == "on",
+				Seconds:     r.FormValue("seconds") == "on",
+				Speed:       r.FormValue("speed") == "on",
+				Grade:       r.FormValue("grade") == "on",
 			}
-                        s.SaveExercise()
+			fmt.Printf("%+v\n", r)
+			s.SaveExercise()
 		}
 		tmpl := template.Must(template.ParseFiles(
 			"templates/exercisecreate.tmpl",
@@ -318,7 +319,7 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 		var exercises []Exercise
 		for rows.Next() {
 			exercise := new(Exercise)
-			err := rows.Scan(&exercise.Id, &exercise.name)
+			err := rows.Scan(&exercise.Id, &exercise.Name)
 			if err != nil {
 				log.Fatal(err)
 			}
