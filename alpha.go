@@ -16,6 +16,7 @@ import (
 )
 
 var listen_port string = ":8080"
+var db_path string = "./alpha.db"
 
 type Set struct {
 	Exercise string
@@ -39,6 +40,11 @@ type Exercise struct {
 	Grade       bool
 }
 
+type Context struct {
+	Workout   Workout
+	Exercises []Exercise
+}
+
 func Max(x, y int) int {
 	if x > y {
 		return x
@@ -46,7 +52,39 @@ func Max(x, y int) int {
 	return y
 }
 
+func GetExercises() []Exercise {
+	sqlstatement := "select exercise.id, exercise.name, exercise.description, exercise.reps, exercise.weight, exercise.seconds, exercise.speed, exercise.grade from exercise"
+	db, err := sql.Open("sqlite3", db_path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	rows, err := db.Query(sqlstatement)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var exercises []Exercise
+	for rows.Next() {
+		exercise := new(Exercise)
+		err := rows.Scan(&exercise.Id,
+			&exercise.Name,
+			&exercise.Description,
+			&exercise.Reps,
+			&exercise.Weight,
+			&exercise.Seconds,
+			&exercise.Speed,
+			&exercise.Grade,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		exercises = append(exercises, *exercise)
+	}
+	return exercises
+}
+
 func (w *Workout) FormattedDate() string {
+	fmt.Printf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	return fmt.Sprintf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
 }
 func (w *Workout) FormatAsMd() string {
@@ -66,7 +104,7 @@ func (w *Workout) AppendSet(s *Set) error {
 }
 
 func (w *Workout) SaveSetInDB() error {
-	db, err := sql.Open("sqlite3", "./alpha.db")
+	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement, err := db.Prepare(`
     INSERT INTO sets(exercise,reps,weight
     ,workout) VALUES(?,?,?,(SELECT id from workout
@@ -134,7 +172,7 @@ func (w *Workout) FormatAsAsciiTable() string {
 
 func (w *Workout) CreateWorkoutInDB() error {
 	timefmt := "2006-01-02T15:04:05"
-	db, err := sql.Open("sqlite3", "./alpha.db")
+	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement, err := db.Prepare(`
 	INSERT INTO workout(date) 
 	VALUES(?);
@@ -157,11 +195,11 @@ func (w *Workout) SaveWorkout() error {
 }
 
 func (ex *Exercise) SaveExercise() error {
-	db, err := sql.Open("sqlite3", "./alpha.db")
+	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement, err := db.Prepare(`
-    INSERT INTO exercise(name, description, reps, weight, seconds, speed, grade)
-    VALUES(?,?,?,?,?,?,?)
-    `)
+	    INSERT INTO exercise(name, description, reps, weight, seconds, speed, grade)
+	    VALUES(?,?,?,?,?,?,?)
+	    `)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,7 +221,7 @@ func (ex *Exercise) SaveExercise() error {
 
 func LoadWorkout(date string) (*Workout, error) {
 	sqlstatement := "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = workout.id and workout.date = " + date
-	db, err := sql.Open("sqlite3", "./alpha.db")
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -241,19 +279,21 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		workout.AppendSet(&s)
 		workout.SaveWorkout()
 	}
-	fmt.Println(workout.FormatAsAsciiTable())
+	var c Context
+	c.Exercises = GetExercises()
+	c.Workout = *workout
 	tmpl := template.Must(template.ParseFiles(
 		"templates/workout.tmpl",
 		"templates/base/header.tmpl",
 		"templates/base/footer.tmpl"))
 
-	tmpl.Execute(w, workout)
+	tmpl.Execute(w, c)
 }
 
 func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 	var date time.Time
 	sqlstatement := "select workout.date from workout"
-	db, err := sql.Open("sqlite3", "./alpha.db")
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -277,7 +317,10 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 		"templates/dashboard.tmpl",
 		"templates/base/header.tmpl",
 		"templates/base/footer.tmpl"))
-	tmpl.Execute(w, workouts)
+	err = tmpl.Execute(w, workouts)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
@@ -305,31 +348,12 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 	} else {
-		sqlstatement := "select exercise.id, exercise.name from exercise"
-		db, err := sql.Open("sqlite3", "./alpha.db")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer db.Close()
-		rows, err := db.Query(sqlstatement)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(rows)
-		var exercises []Exercise
-		for rows.Next() {
-			exercise := new(Exercise)
-			err := rows.Scan(&exercise.Id, &exercise.Name)
-			if err != nil {
-				log.Fatal(err)
-			}
-			exercises = append(exercises, *exercise)
-		}
+		exercises := GetExercises()
 		tmpl := template.Must(template.ParseFiles(
 			"templates/exerciselist.tmpl",
 			"templates/base/header.tmpl",
 			"templates/base/footer.tmpl"))
-		err = tmpl.Execute(w, exercises)
+		err := tmpl.Execute(w, exercises)
 		if err != nil {
 			log.Fatal(err)
 		}

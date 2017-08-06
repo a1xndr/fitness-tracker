@@ -1,12 +1,12 @@
 {{template "header" .}}
-<h3> Workout on {{.FormattedDate}}</h3>
+<pre>{{ printf "%#v" . }}</pre>
 <table>
     <tr>
         <th>Exercise</th>
         <th class="number">Reps</th>
         <th class="number">Weight</th>
     </tr>
-    {{range .Sets}}
+    {{range .Workout.Sets}}
     <tr>
         <td>{{.Exercise}}</td>
         <td class="number">{{.Reps}}</td>
@@ -14,15 +14,13 @@
     </tr>
     {{end}}
 </table>
-<form action="/workout/{{.FormattedDate}}" method="post">
+<form action="/workout" method="post">
     <div class="field-wrapper"> 
         <label for="exercise" class="">Exercise</label> 
     <select tabindex="2" name="exercise">
-            <option value="squat">Squat</option>
-            <option value="bench press">Bench Press</option>
-                <option value="deadlift">Deadlift</option>
-                <option value="pull-up">Pull-up</option>
-                <option value="overhead press">Overhead Press</option>
+            {{range .Exercises}}
+            <option value="{{.Id}}">{{.Name}}</option>
+            {{end}}
     </select> 
     </div>
     <div class="field-wrapper"> 
@@ -36,3 +34,5 @@
     <input type="submit" value="Add Set">
 </form>
 {{template "footer" .}}
+<h3> Workout on {{ .Workout.FormattedDate }}</h3>
+<form action="/workout/{{.Workout.FormattedDate}}" method="post">
