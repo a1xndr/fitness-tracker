@@ -1,5 +1,5 @@
 {{template "header" .}}
-<pre>{{ printf "%#v" . }}</pre>
+<h3> Workout on {{ .Workout.FormattedDate }}</h3>
 <table>
     <tr>
         <th>Exercise</th>
@@ -32,7 +32,6 @@
         <input tabindex="2" type="text" name="weight" size="10">
     </div>
     <input type="submit" value="Add Set">
+    <form action="/workout/{{.Workout.FormattedDate}}" method="post">
 </form>
 {{template "footer" .}}
-<h3> Workout on {{ .Workout.FormattedDate }}</h3>
-<form action="/workout/{{.Workout.FormattedDate}}" method="post">

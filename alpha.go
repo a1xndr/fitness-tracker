@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var listen_port string = ":8080"
+var listen_port string = ":8888"
 var db_path string = "./alpha.db"
 
 type Set struct {
@@ -41,7 +41,7 @@ type Exercise struct {
 }
 
 type Context struct {
-	Workout   Workout
+	Workout   *Workout
 	Exercises []Exercise
 }
 
@@ -84,7 +84,6 @@ func GetExercises() []Exercise {
 }
 
 func (w *Workout) FormattedDate() string {
-	fmt.Printf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
 	return fmt.Sprintf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
 }
 func (w *Workout) FormatAsMd() string {
@@ -281,12 +280,17 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	var c Context
 	c.Exercises = GetExercises()
-	c.Workout = *workout
+	c.Workout = workout
 	tmpl := template.Must(template.ParseFiles(
 		"templates/workout.tmpl",
 		"templates/base/header.tmpl",
 		"templates/base/footer.tmpl"))
-
+/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
+            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
+		"templates/workout.tmpl",
+		"templates/base/header.tmpl",
+		"templates/base/footer.tmpl"))
+*/
 	tmpl.Execute(w, c)
 }
 
