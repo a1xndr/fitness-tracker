@@ -271,6 +271,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	workout, _ = LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day()))
 	workout.CreateWorkoutInDB()
 	if r.Method == http.MethodPost {
+            fmt.Printf("Here")
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)

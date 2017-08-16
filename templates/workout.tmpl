@@ -14,7 +14,7 @@
     </tr>
     {{end}}
 </table>
-<form action="/workout" method="post">
+<form action="/workout/{{.Workout.FormattedDate}}" method="post">
     <div class="field-wrapper"> 
         <label for="exercise" class="">Exercise</label> 
     <select tabindex="2" name="exercise">
@@ -32,6 +32,5 @@
         <input tabindex="2" type="text" name="weight" size="10">
     </div>
     <input type="submit" value="Add Set">
-    <form action="/workout/{{.Workout.FormattedDate}}" method="post">
 </form>
 {{template "footer" .}}
