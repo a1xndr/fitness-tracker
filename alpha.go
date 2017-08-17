@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"html/template"
 	"log"
 	"net/http"
-	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,13 +16,16 @@ var listen_port string = ":8888"
 var db_path string = "./alpha.db"
 
 type Set struct {
+	Id       uint64
 	Exercise string
 	Reps     uint64
 	Weight   float64
-	id       uint64
+	Sets     uint64
+	Seconds   float64
 }
 type Workout struct {
 	Time time.Time
+	Id       uint64
 	Sets []Set
 }
 
@@ -105,7 +105,7 @@ func (w *Workout) AppendSet(s *Set) error {
 func (w *Workout) SaveSetInDB() error {
 	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement, err := db.Prepare(`
-    INSERT INTO sets(exercise,reps,weight
+    INSERT INTO sets(exercise,workout,reps,weight
     ,workout) VALUES(?,?,?,(SELECT id from workout
     WHERE date=?))
     `)
@@ -218,57 +218,52 @@ func (ex *Exercise) SaveExercise() error {
 
 }
 
-func LoadWorkout(date string) (*Workout, error) {
-	sqlstatement := "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = workout.id and workout.date = " + date
+func LoadWorkout(id uint64) (*Workout, error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	rows, err := db.Exec(sqlstatement)
+	
+        sqlstatement := "select workout.date from workout where workout.id = " + string(id)
+	rows, err := db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(rows)
+        
+	w := Workout{Id: id}
+	err = rows.Scan(&w.Id)
 
-	filename := "data/workouts/" + date + ".txt"
-	f, err := os.Open(filename)
-	defer f.Close()
-
-	layout := "2006-01-02"
-	d, _ := time.Parse(layout, date)
-	w := Workout{Time: d}
+	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + string(w.Id)
+	rows, err = db.Query(sqlstatement)
 	if err != nil {
-		return &w, nil
+		log.Fatal(err)
 	}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		matchedSet, _ := regexp.MatchString("Set: ", scanner.Text())
-		matchedExercise, _ := regexp.MatchString("Exercise: ", scanner.Text())
-		matchedReps, _ := regexp.MatchString("Reps: ", scanner.Text())
-		matchedWeight, _ := regexp.MatchString("Weight: ", scanner.Text())
-		if matchedSet {
-			w.Sets = append(w.Sets, Set{})
-		} else if matchedExercise {
-			w.Sets[len(w.Sets)-1].Exercise = strings.Split(scanner.Text(), ":")[1]
-		} else if matchedReps {
-			w.Sets[len(w.Sets)-1].Reps, _ = strconv.ParseUint(strings.Split(scanner.Text(), ":")[1], 10, 64)
-		} else if matchedWeight {
-			w.Sets[len(w.Sets)-1].Weight, _ = strconv.ParseFloat(strings.Split(scanner.Text(), ":")[1], 32)
+	for rows.Next() {
+                s := Set{}
+		err := rows.Scan(
+                    &s.Id,
+                    &s.Exercise,
+                    &s.Reps,
+                    &s.Weight,
+                    &s.Seconds,
+                )
+		if err != nil {
+			log.Fatal(err)
 		}
+		w.Sets = append(w.Sets, s)
 	}
 	return &w, nil
 }
 
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path[len("/workout/"):]
-	t := time.Now()
+	idstr := r.URL.Path[len("/workout/"):]
 	var workout *Workout
-	if id != "" {
-		layout := "2006-01-02"
-		t, _ = time.Parse(layout, id)
+	if idstr == "" {
+            return
 	}
-	workout, _ = LoadWorkout(fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day()))
+        id, _ := strconv.ParseUint(idstr,10,64)
+	workout, _ = LoadWorkout(id)
 	workout.CreateWorkoutInDB()
 	if r.Method == http.MethodPost {
             fmt.Printf("Here")
@@ -307,7 +302,6 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(rows)
 	var workouts []string
 	timefmt := "2006-01-02"
 	for rows.Next() {
