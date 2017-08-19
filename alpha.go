@@ -21,11 +21,11 @@ type Set struct {
 	Reps     uint64
 	Weight   float64
 	Sets     uint64
-	Seconds   float64
+	Seconds  float64
 }
 type Workout struct {
 	Time time.Time
-	Id       uint64
+	Id   uint64
 	Sets []Set
 }
 
@@ -224,30 +224,32 @@ func LoadWorkout(id uint64) (*Workout, error) {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	
-        sqlstatement := "select workout.date from workout where workout.id = " + string(id)
+
+	sqlstatement := "select workout.date from workout where workout.id = " + string(id)
+	fmt.Println(sqlstatement)
 	rows, err := db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
-        
+
 	w := Workout{Id: id}
 	err = rows.Scan(&w.Id)
 
 	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + string(w.Id)
+	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for rows.Next() {
-                s := Set{}
+		s := Set{}
 		err := rows.Scan(
-                    &s.Id,
-                    &s.Exercise,
-                    &s.Reps,
-                    &s.Weight,
-                    &s.Seconds,
-                )
+			&s.Id,
+			&s.Exercise,
+			&s.Reps,
+			&s.Weight,
+			&s.Seconds,
+		)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -260,13 +262,13 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	idstr := r.URL.Path[len("/workout/"):]
 	var workout *Workout
 	if idstr == "" {
-            return
+		return
 	}
-        id, _ := strconv.ParseUint(idstr,10,64)
+	id, _ := strconv.ParseUint(idstr, 10, 64)
 	workout, _ = LoadWorkout(id)
 	workout.CreateWorkoutInDB()
 	if r.Method == http.MethodPost {
-            fmt.Printf("Here")
+		fmt.Printf("Here")
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
@@ -281,18 +283,17 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		"templates/workout.tmpl",
 		"templates/base/header.tmpl",
 		"templates/base/footer.tmpl"))
-/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
-            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
-		"templates/workout.tmpl",
-		"templates/base/header.tmpl",
-		"templates/base/footer.tmpl"))
-*/
+	/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
+		            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
+				"templates/workout.tmpl",
+				"templates/base/header.tmpl",
+				"templates/base/footer.tmpl"))
+	*/
 	tmpl.Execute(w, c)
 }
 
 func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
-	var date time.Time
-	sqlstatement := "select workout.date from workout"
+	sqlstatement := "select workout.date, workout.id from workout"
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		log.Fatal(err)
@@ -302,15 +303,15 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var workouts []string
-	timefmt := "2006-01-02"
+	var workouts []Workout
+	//timefmt := "2006-01-02"
 	for rows.Next() {
-		err := rows.Scan(&date)
+		w := Workout{}
+		err := rows.Scan(&w.Time, &w.Id)
 		if err != nil {
 			log.Fatal(err)
 		}
-		workouts = append([]string{date.Format(timefmt)}, workouts...)
-		fmt.Println(workouts[len(workouts)-1])
+		workouts = append(workouts, w)
 	}
 	tmpl := template.Must(template.ParseFiles(
 		"templates/dashboard.tmpl",
