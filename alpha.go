@@ -84,7 +84,7 @@ func GetExercises() []Exercise {
 }
 
 func (w *Workout) FormattedDate() string {
-	return fmt.Sprintf("%04d-%02d-%02d", w.Time.Year(), w.Time.Month(), w.Time.Day())
+	return w.Time.Format("2006-01-02 15:04:05")
 }
 func (w *Workout) FormatAsMd() string {
 	var wlog string
@@ -224,18 +224,17 @@ func LoadWorkout(id uint64) (*Workout, error) {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
-	sqlstatement := "select workout.date from workout where workout.id = " + string(id)
+	fmt.Println(id)
+	sqlstatement := "select workout.date from workout where workout.id =" + fmt.Sprintf("%v", id)
 	fmt.Println(sqlstatement)
 	rows, err := db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	w := Workout{Id: id}
-	err = rows.Scan(&w.Id)
-
-	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + string(w.Id)
+	err = rows.Scan(&w.Time)
+	fmt.Println(w.Time)
+	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
 	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
@@ -304,7 +303,6 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	var workouts []Workout
-	//timefmt := "2006-01-02"
 	for rows.Next() {
 		w := Workout{}
 		err := rows.Scan(&w.Time, &w.Id)
