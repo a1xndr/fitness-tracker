@@ -3,7 +3,7 @@
         <a href="/workout/">New Workout</a>
         <ul>
             {{range .}}
-            <li><a href="/workout/{{.}}">{{.}}</a></li>
+            <li><a href="/workout/{{.Id}}">{{.Time.Format "2006-01-02"}}</a></li>
             {{end}}
         </ul>
 {{template "footer" .}}
