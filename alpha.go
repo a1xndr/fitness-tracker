@@ -220,7 +220,7 @@ func (ex *Exercise) SaveExercise() error {
 
 }
 
-func LoadWorkout(id uint64) (*Workout, error) {
+func LoadWorkout(id uint64) (Workout, error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		log.Fatal(err)
@@ -256,12 +256,15 @@ func LoadWorkout(id uint64) (*Workout, error) {
 		}
 		w.Sets = append(w.Sets, s)
 	}
-	return &w, nil
+	return w, nil
 }
 
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	idstr := r.URL.Path[len("/workout/"):]
-	var workout *Workout
+	var workout Workout
+	workout.Time = time.Now()
+	fmt.Println(idstr)
+	fmt.Printf("%+v\n", workout)
 	if idstr != "" {
 		id, _ := strconv.ParseUint(idstr, 10, 64)
 		workout, _ = LoadWorkout(id)
@@ -277,7 +280,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	var c Context
 	c.Exercises = GetExercises()
-	c.Workout = workout
+	c.Workout = &workout
 	tmpl := template.Must(template.ParseFiles(
 		"templates/workout.tmpl",
 		"templates/base/header.tmpl",
