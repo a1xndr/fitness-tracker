@@ -267,6 +267,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	idstr := r.URL.Path[len("/workout/"):]
 	fmt.Println(idstr)
 	var workout Workout
+	// If new workout, create it in DB and http redirect to its Id
 	if idstr == "" {
 		workout.Time = time.Now()
 		err := workout.CreateInDB()
@@ -280,6 +281,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 			id, _ := strconv.ParseUint(idstr, 10, 64)
 			workout, _ = LoadWorkout(id)
 		}
+		// Process form input
 		if r.Method == http.MethodPost {
 			if idstr == "" {
 				id, _ := strconv.ParseUint(idstr, 10, 64)
@@ -292,6 +294,8 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 			workout.AppendSet(&s)
 			workout.SaveWorkout()
 		}
+
+		// Assemble template root struct and execute the template
 		var c Context
 		c.Exercises = GetExercises()
 		c.Workout = &workout
@@ -299,12 +303,6 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 			"templates/workout.tmpl",
 			"templates/base/header.tmpl",
 			"templates/base/footer.tmpl"))
-		/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
-			            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
-					"templates/workout.tmpl",
-					"templates/base/header.tmpl",
-					"templates/base/footer.tmpl"))
-		*/
 		tmpl.Execute(w, c)
 	}
 
