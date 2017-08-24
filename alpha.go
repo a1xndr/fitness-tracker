@@ -263,7 +263,9 @@ func LoadWorkout(id uint64) (Workout, error) {
 }
 
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
 	idstr := r.URL.Path[len("/workout/"):]
+	fmt.Println(idstr)
 	var workout Workout
 	if idstr == "" {
 		workout.Time = time.Now()
@@ -271,42 +273,41 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
+		//http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
 		return
-	}
-	fmt.Println(idstr)
-	fmt.Printf("%+v\n", workout)
-
-	if idstr != "" {
-		id, _ := strconv.ParseUint(idstr, 10, 64)
-		workout, _ = LoadWorkout(id)
-	}
-	if r.Method == http.MethodPost {
-		if idstr == "" {
+	} else {
+		if idstr != "" {
 			id, _ := strconv.ParseUint(idstr, 10, 64)
 			workout, _ = LoadWorkout(id)
 		}
-		exercise := r.FormValue("exercise")
-		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
-		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
-		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
-		workout.AppendSet(&s)
-		workout.SaveWorkout()
+		if r.Method == http.MethodPost {
+			if idstr == "" {
+				id, _ := strconv.ParseUint(idstr, 10, 64)
+				workout, _ = LoadWorkout(id)
+			}
+			exercise := r.FormValue("exercise")
+			reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
+			weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
+			s := Set{Exercise: exercise, Reps: reps, Weight: weight}
+			workout.AppendSet(&s)
+			workout.SaveWorkout()
+		}
+		var c Context
+		c.Exercises = GetExercises()
+		c.Workout = &workout
+		tmpl := template.Must(template.ParseFiles(
+			"templates/workout.tmpl",
+			"templates/base/header.tmpl",
+			"templates/base/footer.tmpl"))
+		/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
+			            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
+					"templates/workout.tmpl",
+					"templates/base/header.tmpl",
+					"templates/base/footer.tmpl"))
+		*/
+		tmpl.Execute(w, c)
 	}
-	var c Context
-	c.Exercises = GetExercises()
-	c.Workout = &workout
-	tmpl := template.Must(template.ParseFiles(
-		"templates/workout.tmpl",
-		"templates/base/header.tmpl",
-		"templates/base/footer.tmpl"))
-	/*	tmpl := template.Must(template.New(workout.tmpl).Funcs(
-		            template.FuncMap{"FormattedDate": Workout.FormattedDate}).ParseFiles(
-				"templates/workout.tmpl",
-				"templates/base/header.tmpl",
-				"templates/base/footer.tmpl"))
-	*/
-	tmpl.Execute(w, c)
+
 }
 
 func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
