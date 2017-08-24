@@ -14,7 +14,7 @@
     </tr>
     {{end}}
 </table>
-<form action="/workout/{{.Workout.FormattedDate}}" method="post">
+<form action="/workout/{{.Workout.Id}}" method="post">
     <div class="field-wrapper"> 
         <label for="exercise" class="">Exercise</label> 
     <select tabindex="2" name="exercise">

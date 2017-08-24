@@ -170,14 +170,15 @@ func (w *Workout) FormatAsAsciiTable() string {
 	return Table
 }
 
-func (w *Workout) CreateWorkoutInDB() error {
+func (w *Workout) CreateInDB() error {
 	timefmt := "2006-01-02T15:04:05"
 	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement := `
 	INSERT INTO workout(date) 
-	VALUES(` + w.Time.Format(timefmt) + `);
-	SELECT last_insert_rowid()
+	VALUES("` + w.Time.Format(timefmt) + `");
+	SELECT last_insert_rowid();
 	`
+	fmt.Println(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -187,7 +188,9 @@ func (w *Workout) CreateWorkoutInDB() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = rows.Scan(&w.Id)
+	for rows.Next() {
+		err = rows.Scan(&w.Id)
+	}
 	return err
 }
 
@@ -262,15 +265,27 @@ func LoadWorkout(id uint64) (Workout, error) {
 func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	idstr := r.URL.Path[len("/workout/"):]
 	var workout Workout
-	workout.Time = time.Now()
+	if idstr == "" {
+		workout.Time = time.Now()
+		err := workout.CreateInDB()
+		if err != nil {
+			log.Fatal(err)
+		}
+		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
+		return
+	}
 	fmt.Println(idstr)
 	fmt.Printf("%+v\n", workout)
+
 	if idstr != "" {
 		id, _ := strconv.ParseUint(idstr, 10, 64)
 		workout, _ = LoadWorkout(id)
 	}
 	if r.Method == http.MethodPost {
-		fmt.Printf("Here")
+		if idstr == "" {
+			id, _ := strconv.ParseUint(idstr, 10, 64)
+			workout, _ = LoadWorkout(id)
+		}
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
