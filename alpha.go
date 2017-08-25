@@ -106,9 +106,9 @@ func (w *Workout) AppendSet(s *Set) error {
 func (w *Workout) SaveSetInDB() error {
 	db, err := sql.Open("sqlite3", db_path)
 	sqlstatement, err := db.Prepare(`
-    INSERT INTO sets(exercise,workout,reps,weight
-    ,workout) VALUES(?,?,?,(SELECT id from workout
-    WHERE date=?))
+    INSERT INTO sets(exercise,reps,weight
+    ,workout) SELECT ?,?,?, id from workout
+    WHERE date=?
     `)
 	timefmt := "2006-01-02 15:04:05"
 	if err != nil {
@@ -279,10 +279,6 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	// Process form input
 	if r.Method == http.MethodPost {
-		if idstr == "" {
-			id, _ := strconv.ParseUint(idstr, 10, 64)
-			workout, _ = LoadWorkout(id)
-		}
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
@@ -371,6 +367,7 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
 	http.HandleFunc("/workout/", WorkoutTaskFunc)
 	http.HandleFunc("/exercise/", ExerciseTaskFunc)
 	http.HandleFunc("/dashboard", DashboardTaskFunc)
