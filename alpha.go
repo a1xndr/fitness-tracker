@@ -173,24 +173,19 @@ func (w *Workout) FormatAsAsciiTable() string {
 func (w *Workout) CreateInDB() error {
 	timefmt := "2006-01-02T15:04:05"
 	db, err := sql.Open("sqlite3", db_path)
-	sqlstatement := `
+	sqlstatement, err := db.Prepare(`
 	INSERT INTO workout(date) 
-	VALUES("` + w.Time.Format(timefmt) + `");
-	SELECT last_insert_rowid();
-	`
-	fmt.Println(sqlstatement)
+	VALUES(?);
+	`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	rows, err := db.Query(sqlstatement)
-	fmt.Println(rows)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for rows.Next() {
-		err = rows.Scan(&w.Id)
-	}
+	res, err := sqlstatement.Exec(w.Time.Format(timefmt))
+	id, err := res.LastInsertId()
+	w.Id = uint64(id)
+	fmt.Println("adasdsada")
+	fmt.Println(w.Id)
 	return err
 }
 
@@ -274,37 +269,37 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
+		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
 		return
-	} else {
-		if idstr != "" {
+	}
+
+	if idstr != "" {
+		id, _ := strconv.ParseUint(idstr, 10, 64)
+		workout, _ = LoadWorkout(id)
+	}
+	// Process form input
+	if r.Method == http.MethodPost {
+		if idstr == "" {
 			id, _ := strconv.ParseUint(idstr, 10, 64)
 			workout, _ = LoadWorkout(id)
 		}
-		// Process form input
-		if r.Method == http.MethodPost {
-			if idstr == "" {
-				id, _ := strconv.ParseUint(idstr, 10, 64)
-				workout, _ = LoadWorkout(id)
-			}
-			exercise := r.FormValue("exercise")
-			reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
-			weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
-			s := Set{Exercise: exercise, Reps: reps, Weight: weight}
-			workout.AppendSet(&s)
-			workout.SaveWorkout()
-		}
-
-		// Assemble template root struct and execute the template
-		var c Context
-		c.Exercises = GetExercises()
-		c.Workout = &workout
-		tmpl := template.Must(template.ParseFiles(
-			"templates/workout.tmpl",
-			"templates/base/header.tmpl",
-			"templates/base/footer.tmpl"))
-		tmpl.Execute(w, c)
+		exercise := r.FormValue("exercise")
+		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
+		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
+		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
+		workout.AppendSet(&s)
+		workout.SaveWorkout()
 	}
+
+	// Assemble template root struct and execute the template
+	var c Context
+	c.Exercises = GetExercises()
+	c.Workout = &workout
+	tmpl := template.Must(template.ParseFiles(
+		"templates/workout.tmpl",
+		"templates/base/header.tmpl",
+		"templates/base/footer.tmpl"))
+	tmpl.Execute(w, c)
 
 }
 
