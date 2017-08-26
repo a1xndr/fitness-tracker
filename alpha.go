@@ -108,9 +108,9 @@ func (w *Workout) SaveSetInDB() error {
 	sqlstatement, err := db.Prepare(`
     INSERT INTO sets(exercise,reps,weight
     ,workout) SELECT ?,?,?, id from workout
-    WHERE date=?
+    WHERE id=?
     `)
-	timefmt := "2006-01-02 15:04:05"
+	fmt.Println(w.FormatAsAsciiTable())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func (w *Workout) SaveSetInDB() error {
 		w.Sets[len(w.Sets)-1].Exercise,
 		w.Sets[len(w.Sets)-1].Reps,
 		w.Sets[len(w.Sets)-1].Weight,
-		w.Time.Format(timefmt))
+		w.Id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -276,6 +276,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	if idstr != "" {
 		id, _ := strconv.ParseUint(idstr, 10, 64)
 		workout, _ = LoadWorkout(id)
+		fmt.Printf("%+v", workout)
 	}
 	// Process form input
 	if r.Method == http.MethodPost {
@@ -283,6 +284,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
 		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
+		fmt.Printf("%+v", workout)
 		workout.AppendSet(&s)
 		workout.SaveWorkout()
 	}
