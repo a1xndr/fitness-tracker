@@ -234,7 +234,8 @@ func LoadWorkout(id uint64) (Workout, error) {
 	w := Workout{Id: id}
 	err = rows.Scan(&w.Time)
 	fmt.Println(w.Time)
-	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
+	//sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
+	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
 	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
@@ -247,7 +248,7 @@ func LoadWorkout(id uint64) (Workout, error) {
 			&s.Exercise,
 			&s.Reps,
 			&s.Weight,
-			&s.Seconds,
+			//			&s.Seconds,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -269,7 +270,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 301)
+		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 307)
 		return
 	}
 
@@ -286,7 +287,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
 		fmt.Printf("%+v", workout)
 		workout.AppendSet(&s)
-		workout.SaveWorkout()
+		//workout.SaveWorkout()
 	}
 
 	// Assemble template root struct and execute the template
