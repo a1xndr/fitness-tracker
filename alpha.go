@@ -224,19 +224,21 @@ func LoadWorkout(id uint64) (Workout, error) {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	fmt.Println(id)
 	sqlstatement := "select workout.date from workout where workout.id =" + fmt.Sprintf("%v", id)
-	fmt.Println(sqlstatement)
+
 	rows, err := db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
 	}
 	w := Workout{Id: id}
-	err = rows.Scan(&w.Time)
-	fmt.Println(w.Time)
-	//sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight, sets.seconds from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
+	for rows.Next() {
+		err = rows.Scan(&w.Time)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight from sets, workout where sets.workout = " + fmt.Sprintf("%v", w.Id)
-	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
@@ -270,6 +272,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		// Temporary redirect /workout/newid
 		http.Redirect(w, r, "/workout/"+fmt.Sprint(workout.Id), 307)
 		return
 	}
