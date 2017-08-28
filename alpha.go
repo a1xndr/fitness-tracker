@@ -238,7 +238,9 @@ func LoadWorkout(id uint64) (Workout, error) {
 		log.Fatal(err)
 	}
 
-	sqlstatement = "select sets.id, sets.exercise, sets.reps, sets.weight from sets where sets.workout = " + fmt.Sprintf("%v", w.Id)
+	sqlstatement = `SELECT sets.id, sets.reps, sets.weight, exercise.name 
+	FROM sets, exercise
+	WHERE exercise.Id = sets.exercise AND sets.workout = ` + fmt.Sprintf("%v", w.Id)
 	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
@@ -248,10 +250,9 @@ func LoadWorkout(id uint64) (Workout, error) {
 		s := Set{}
 		err := rows.Scan(
 			&s.Id,
-			&s.Exercise,
 			&s.Reps,
 			&s.Weight,
-			//			&s.Seconds,
+			&s.Exercise,
 		)
 		if err != nil {
 			log.Fatal(err)
