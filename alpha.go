@@ -241,7 +241,6 @@ func LoadWorkout(id uint64) (Workout, error) {
 	sqlstatement = `SELECT sets.id, sets.reps, sets.weight, exercise.name 
 	FROM sets, exercise
 	WHERE exercise.Id = sets.exercise AND sets.workout = ` + fmt.Sprintf("%v", w.Id)
-	fmt.Println(sqlstatement)
 	rows, err = db.Query(sqlstatement)
 	if err != nil {
 		log.Fatal(err)
@@ -289,6 +288,7 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 		exercise := r.FormValue("exercise")
 		reps, _ := strconv.ParseUint(r.FormValue("reps"), 10, 64)
 		weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
+		// Will print ID rather than Exercise name
 		s := Set{Exercise: exercise, Reps: reps, Weight: weight}
 		fmt.Printf("%+v", workout)
 		workout.AppendSet(&s)
