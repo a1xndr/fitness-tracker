@@ -20,8 +20,15 @@ func main() {
 	dashboardsc := controllers.ServiceController{"/dashboard/", controllers.DashboardTaskFunc}
 	dashboardsc.Register(s)
 
+	// css and images
 	staticsc := controllers.ServiceController{"/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))).ServeHTTP}
 	staticsc.Register(s)
+
+	// redirect GET / to dashboard
+	rootsc := controllers.ServiceController{"/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "dashboard", 301)
+	}}
+	rootsc.Register(s)
 
 	graceful.Run(":"+port, 0, s)
 }
