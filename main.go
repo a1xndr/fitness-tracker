@@ -4,7 +4,7 @@ import (
 	"alpha/controllers"
 	"alpha/web"
 	"github.com/stretchr/graceful"
-	//	"time"
+	"net/http"
 )
 
 func main() {
@@ -19,6 +19,9 @@ func main() {
 
 	dashboardsc := controllers.ServiceController{"/dashboard/", controllers.DashboardTaskFunc}
 	dashboardsc.Register(s)
+
+	staticsc := controllers.ServiceController{"/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))).ServeHTTP}
+	staticsc.Register(s)
 
 	graceful.Run(":"+port, 0, s)
 }
