@@ -1,0 +1,36 @@
+{{define "body"}}
+<h3> Workout on {{ .Workout.FormattedDate }}</h3>
+<table>
+    <tr>
+        <th>Exercise</th>
+        <th class="number">Reps</th>
+        <th class="number">Weight</th>
+    </tr>
+    {{range .Workout.Sets}}
+    <tr>
+        <td>{{.Exercise}}</td>
+        <td class="number">{{.Reps}}</td>
+        <td class="number">{{.Weight}}</td>
+    </tr>
+    {{end}}
+</table>
+<form action="/workout/{{.Workout.Id}}" method="post">
+    <div class="field-wrapper"> 
+        <label for="exercise" class="">Exercise</label> 
+    <select tabindex="2" name="exercise">
+            {{range .Exercises}}
+            <option value="{{.Id}}">{{.Name}}</option>
+            {{end}}
+    </select> 
+    </div>
+    <div class="field-wrapper"> 
+        <label for="reps" class="">Reps</label> 
+        <input tabindex="2" type="text" name="reps" size="10">
+    </div>
+    <div class="field-wrapper"> 
+        <label for="weight" class="">Weight</label> 
+        <input tabindex="2" type="text" name="weight" size="10">
+    </div>
+    <input type="submit" value="Add Set">
+</form>
+{{end}}

@@ -225,9 +225,9 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 			s.SaveExercise()
 		}
 		tmpl := template.Must(template.ParseFiles(
-			"templates/exercisecreate.tmpl",
-			"templates/base/header.tmpl",
-			"templates/base/footer.tmpl"))
+			"templates/base/layout.html",
+			"templates/exercisecreate.html",
+		))
 		err := tmpl.Execute(w, nil)
 		if err != nil {
 			log.Fatal(err)
@@ -235,9 +235,9 @@ func ExerciseTaskFunc(w http.ResponseWriter, r *http.Request) {
 	} else {
 		exercises := GetExercises()
 		tmpl := template.Must(template.ParseFiles(
-			"templates/exerciselist.tmpl",
-			"templates/base/header.tmpl",
-			"templates/base/footer.tmpl"))
+			"templates/base/layout.html",
+			"templates/exerciselist.html",
+		))
 		err := tmpl.Execute(w, exercises)
 		if err != nil {
 			log.Fatal(err)
@@ -266,9 +266,9 @@ func DashboardTaskFunc(w http.ResponseWriter, r *http.Request) {
 		workouts = append(workouts, w)
 	}
 	tmpl := template.Must(template.ParseFiles(
-		"templates/dashboard.tmpl",
-		"templates/base/header.tmpl",
-		"templates/base/footer.tmpl"))
+		"templates/base/layout.html",
+		"templates/dashboard.html",
+	))
 	err = tmpl.Execute(w, workouts)
 	if err != nil {
 		log.Fatal(err)
@@ -314,9 +314,9 @@ func WorkoutTaskFunc(w http.ResponseWriter, r *http.Request) {
 	c.Exercises = GetExercises()
 	c.Workout = &workout
 	tmpl := template.Must(template.ParseFiles(
-		"templates/workout.tmpl",
-		"templates/base/header.tmpl",
-		"templates/base/footer.tmpl"))
+		"templates/base/layout.html",
+		"templates/workout.html",
+	))
 	tmpl.Execute(w, c)
 
 }
