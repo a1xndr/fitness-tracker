@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/graceful"
 )
 
+var port string = "8888"
+
 func main() {
-	port := "8888"
 	s := web.NewServer()
 
 	workoutsc := controllers.ServiceController{"/workout/", controllers.WorkoutTaskFunc}
