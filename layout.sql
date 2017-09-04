@@ -3,10 +3,12 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE user (
-    id integer primary key autoincrement,
+    id integer primary key identity(1,1),
     username varchar(100),
-    password varchar(1000),
-    email varchar(100)
+    password_hash varchar(1000),
+    password_salt varchar(1000),
+    email varchar(100),
+    disabled bool
 );
 COMMIT;
 
@@ -36,7 +38,8 @@ CREATE TABLE exercisemetric (
     seconds integer,
     speed integer,
     grade integer,
-    note integer
+    note integer,
+    author references user(id)
 );
 COMMIT;
 
@@ -45,6 +48,7 @@ BEGIN TRANSACTION;
 CREATE TABLE workout(
     id integer primary key autoincrement,
     date datetime
+    user references user(id),
 );
 
 COMMIT;
