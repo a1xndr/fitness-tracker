@@ -1,0 +1,1 @@
+ - struct tags to make model population ez? sqlx required?
