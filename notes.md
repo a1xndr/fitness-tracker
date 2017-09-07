@@ -1,0 +1,3 @@
+ - struct tags to make model population ez? sqlx required?
+ - need to add middleware to deal with sqli in all forms
+ - seems like everyone recommends running nginx reverse-proxy+TLS instead of native TLS in the app
