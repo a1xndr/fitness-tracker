@@ -14,7 +14,7 @@ func NewServer() *Server {
 	s.HandleFunc("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))).ServeHTTP)
 
 	s.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "dashboard", 301)
+		http.Redirect(w, r, "login", 302)
 	})
 
 	return &s
