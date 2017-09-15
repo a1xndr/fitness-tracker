@@ -5,9 +5,9 @@ BEGIN TRANSACTION;
 CREATE TABLE user (
     id integer primary key identity(1,1),
     username varchar(100),
-    password_hash varchar(1000),
-    password_salt varchar(1000),
+    password_hashed varchar(1000),
     email varchar(100),
+    created_at datetime,
     disabled bool
 );
 COMMIT;

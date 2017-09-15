@@ -19,18 +19,20 @@ func LoginGET(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginPOST(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	password := r.FormValue("password")
+	//username := r.FormValue("username")
+	//password := r.FormValue("password")
 
-	db, err := sql.Open("sqlite", db_path)
-	sqlstatement := "SELECT id, password_hash, password_salt, email, disabled FROM user WHERE username=" + username
-	rows, err := db.Query(sqlstatement)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for rows.Next() {
-		// Populate User struct
-	}
+	/*
+		db, err := sql.Open("sqlite", db_path)
+		sqlstatement := "SELECT id, password_hash, password_salt, email, disabled FROM user WHERE username=" + username
+		rows, err := db.Query(sqlstatement)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for rows.Next() {
+			// Populate User struct
+		}
+	*/
 
 	// Check the password against hash + salt from DB
 
