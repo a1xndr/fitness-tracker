@@ -1,11 +1,11 @@
-package model
+package models
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 	"time"
+	"log"
 )
 
 type User struct {
@@ -16,6 +16,8 @@ type User struct {
 	CreatedAt      time.Time
 	Disabled       bool
 }
+
+var db_path string = "./alpha.db"
 
 func UserCreate(username string, email string, password string) {
 	var err error
@@ -44,7 +46,7 @@ func UserCreate(username string, email string, password string) {
 }
 
 func hashAndSalt(password string) string {
-	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatal(err)
 	}

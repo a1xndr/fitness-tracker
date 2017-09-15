@@ -1,13 +1,36 @@
 {{define "body"}} 
-<h3> login </h3>
-<form method="post">
-    <div class="field-wrapper">
-        <label for="reps" class="">username</label>
-        <input tabindex="2" type="text" name="reps" size="10">
-    </div>
-    <div class="field-wrapper">
-        <label for="reps" class="">password</label>
-        <input tabindex="2" type="PASSWORD" name="reps" size="10">
-    </div>
-</form>
+<div style="display: flex; flex-wrap:wrap;">
+	<div style="margin-right:30px">
+	<form method="post" action="/login/">
+	<h3> login </h3>
+		<div class="field-wrapper">
+			<label for="reps" class="">username</label>
+			<input tabindex="2" type="text" name="username" size="10">
+		</div>
+		<div class="field-wrapper">
+				<label for="password" class="">password</label>
+				<input tabindex="2" type="password" name="password" size="10">
+		</div>
+		<input type="submit" value="login">
+	</form>
+	</div>
+	<div style="flex-grow:1">
+	<form method="post" action="/register/">
+	<h3> register </h3>
+		<div class="field-wrapper">
+			<label for="reps" class="">username</label>
+			<input tabindex="2" type="text" name="username" size="10">
+		</div>
+		<div class="field-wrapper">
+			<label for="email" class="">email</label>
+			<input tabindex="2" type="text" name="email" size="10">
+		</div>
+		<div class="field-wrapper">
+				<label for="password" class="">password</label>
+				<input tabindex="2" type="password" name="password" size="10">
+		</div>
+		<input type="submit" value="register">
+	</form>
+	</div>
+</div>
 {{end}}

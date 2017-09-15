@@ -22,6 +22,9 @@ func main() {
 
 	loginsc := controller.ServiceController{"/login/", controller.LoginGET}
 	loginsc.Register(s)
+	
+	registersc := controller.ServiceController{"/register/", controller.RegisterPOST}
+	registersc.Register(s)
 
 	graceful.Run(":"+port, 0, s)
 }
