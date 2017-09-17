@@ -1,12 +1,17 @@
 package controller
 
 import (
+	"alpha/models"
 	"html/template"
 	"log"
 	"net/http"
 )
 
 func LoginGET(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		LoginPOST(w, r)
+		return
+	}
 	// View
 	tmpl := template.Must(template.ParseFiles(
 		"templates/base/layout.html",
@@ -19,20 +24,17 @@ func LoginGET(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginPOST(w http.ResponseWriter, r *http.Request) {
-//  username := r.FormValue("username")
-//	password := r.FormValue("password")
-	
+	username := r.FormValue("username")
+	password := r.FormValue("password")
 
-	// Check the password against hash + salt from DB
+	user, err := models.UserByUsername(username)
 
-	// Redirect them to the dashboard or reload the page
-	tmpl := template.Must(template.ParseFiles(
-		"templates/base/layout.html",
-		"templates/login.html",
-	))
-	err := tmpl.Execute(w, nil)
 	if err != nil {
+		http.Redirect(w, r, "/login/", 307)
 		log.Fatal(err)
 	}
 
+	if models.HashAndSalt(password) == user.PasswordHashed {
+		http.Redirect(w, r, "/dashboard/", 307)
+	}
 }
