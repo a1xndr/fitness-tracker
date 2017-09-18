@@ -33,8 +33,7 @@ func LoginPOST(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login/", 307)
 		log.Fatal(err)
 	}
-
-	if models.HashAndSalt(password) == user.PasswordHashed {
+	if user.CheckPasswordMatch(password) {
 		http.Redirect(w, r, "/dashboard/", 307)
 	}
 }

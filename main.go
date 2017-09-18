@@ -2,13 +2,18 @@ package main
 
 import (
 	"alpha/controller"
+	"alpha/db"
 	"alpha/web"
 	"github.com/stretchr/graceful"
 )
 
 var port string = "8888"
+var db_path string = "./alpha.db"
 
 func main() {
+	dbinfo := db.DBinfo{db_path}
+	db.Connect(dbinfo)
+
 	s := web.NewServer()
 
 	workoutsc := controller.ServiceController{"/workout/", controller.WorkoutTaskFunc}
@@ -22,7 +27,7 @@ func main() {
 
 	loginsc := controller.ServiceController{"/login/", controller.LoginGET}
 	loginsc.Register(s)
-	
+
 	registersc := controller.ServiceController{"/register/", controller.RegisterPOST}
 	registersc.Register(s)
 

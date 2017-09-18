@@ -1,20 +1,19 @@
 package models
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"alpha/db"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"time"
 )
 
 type User struct {
-	Id             uint32
-	Username       string
-	PasswordHashed string // And salted
-	Email          string
-	CreatedAt      time.Time
-	Disabled       bool
+	Id             uint32    `db:"id"`
+	Username       string    `db:"username"`
+	PasswordHashed string    `db:"password_hashed"` //bcrypt
+	Email          string    `db:"email"`
+	CreatedAt      time.Time `db:"created_at"`
+	Disabled       bool      `db:"disabled"`
 }
 
 var db_path string = "./alpha.db"
@@ -22,18 +21,10 @@ var db_path string = "./alpha.db"
 func UserCreate(username string, email string, password string) {
 	var err error
 	time := time.Now()
-
-	db, err := sql.Open("sqlite3", db_path)
-	sqlstatement, err := db.Prepare(
+	db.SQL.Exec(
 		`INSERT INTO user(username,password_hashed,email,created_at,disabled)
 		VALUES (?,?,?,?,?)
-	`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	_, err = sqlstatement.Exec(
+		`,
 		username,
 		HashAndSalt(password),
 		email,
@@ -50,27 +41,16 @@ func UserByUsername(username string) (User, error) {
 
 	user := User{}
 
-	db, err := sql.Open("sqlite3", db_path)
-	defer db.Close()
-	result := db.QueryRow(
+	err = db.SQL.Get(&user,
 		`SELECT id,username,password_hashed,email,created_at,disabled 
 		FROM user
-		WHERE username = ?
+		WHERE username = ? 
+		LIMIT 1
 	`, username)
 	if err != nil {
 		return user, err
 	}
 
-	err = result.Scan(&user.Id,
-		&user.Username,
-		&user.PasswordHashed,
-		&user.Email,
-		&user.CreatedAt,
-		&user.Disabled)
-
-	if err != nil {
-		log.Fatal(err)
-	}
 	return user, nil
 }
 
@@ -80,4 +60,11 @@ func HashAndSalt(password string) string {
 		log.Fatal(err)
 	}
 	return string(hash)
+}
+
+func (u *User) CheckPasswordMatch(password string) bool {
+	result := bcrypt.CompareHashAndPassword([]byte(u.PasswordHashed),
+		[]byte(password))
+
+	return result == nil
 }
